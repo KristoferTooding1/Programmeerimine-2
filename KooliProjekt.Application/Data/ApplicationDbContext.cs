@@ -12,5 +12,10 @@ namespace KooliProjekt.Application.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
+
+        public DbSet<Car> Cars { get; set; }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<Operation> Operations { get; set; }
+        public DbSet<OperationType> OperationTypes { get; set; }
     }
 }

@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
 
 namespace KooliProjekt.WebAPI
 {
@@ -52,6 +54,24 @@ namespace KooliProjekt.WebAPI
 
 
             app.MapControllers();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<KooliProjekt.Application.Data.ApplicationDbContext>();
+
+                    context.Database.Migrate();
+
+                    KooliProjekt.Application.SeedData.Initialize(context);
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "Andmebaasi algistendamisel või SeedData käivitamisel tekkis viga.");
+                }
+            }
 
             app.Run();
         }
