@@ -1,14 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MediatR;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using KooliProjekt.Application.Features.Cars;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
 namespace KooliProjekt.WebAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class CarsController : ControllerBase
+    public class CarsController : ApiControllerBase
     {
         private readonly IMediator _mediator;
 
@@ -17,29 +14,47 @@ namespace KooliProjekt.WebAPI.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<List<CarDto>>> List()
-        {
-            var result = await _mediator.Send(new CarListQuery());
-            return Ok(result);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<CarDto>> Get(int id)
+        [HttpGet("get/{id}")]
+        public async Task<IActionResult> Get(int id)
         {
             if (id <= 0)
             {
                 return NotFound();
             }
 
-            var result = await _mediator.Send(new CarGetQuery(id));
+            var query = new GetCarQuery { Id = id };
+            var result = await _mediator.Send(query);
 
-            if (result == null)
+            return Result(result);
+        }
+
+        [HttpGet("list/{page}/{pageSize}")]
+        public async Task<IActionResult> List(int page, int pageSize)
+        {
+            var query = new ListCarsQuery
             {
-                return NotFound();
-            }
+                Page = page,
+                PageSize = pageSize
+            };
+            var result = await _mediator.Send(query);
 
-            return Ok(result);
+            return Result(result);
+        }
+
+        [HttpPost("save")]
+        public async Task<IActionResult> Save([FromBody] SaveCarCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            return Result(result);
+        }
+
+        [HttpDelete("delete")]
+        public async Task<IActionResult> Delete([FromBody] DeleteCarCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            return Result(result);
         }
     }
 }

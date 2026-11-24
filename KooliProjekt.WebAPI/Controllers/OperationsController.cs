@@ -1,14 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MediatR;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using KooliProjekt.Application.Features.Operations;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
 namespace KooliProjekt.WebAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class OperationsController : ControllerBase
+    public class OperationsController : ApiControllerBase
     {
         private readonly IMediator _mediator;
 
@@ -17,30 +14,47 @@ namespace KooliProjekt.WebAPI.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<List<OperationDto>>> List()
-        {
-            var result = await _mediator.Send(new OperationListQuery());
-            return Ok(result);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<OperationDto>> Get(int id)
+        [HttpGet("get/{id}")]
+        public async Task<IActionResult> Get(int id)
         {
             if (id <= 0)
             {
                 return NotFound();
             }
 
-            var result = await _mediator.Send(new OperationGetQuery(id));
+            var query = new GetOperationQuery { Id = id };
+            var result = await _mediator.Send(query);
 
-            if (result == null)
+            return Result(result);
+        }
+
+        [HttpGet("list/{page}/{pageSize}")]
+        public async Task<IActionResult> List(int page, int pageSize)
+        {
+            var query = new ListOperationsQuery
             {
-                return NotFound();
-            }
+                Page = page,
+                PageSize = pageSize
+            };
+            var result = await _mediator.Send(query);
 
-            return Ok(result);
+            return Result(result);
+        }
+
+        [HttpPost("save")]
+        public async Task<IActionResult> Save([FromBody] SaveOperationCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            return Result(result);
+        }
+
+        [HttpDelete("delete")]
+        public async Task<IActionResult> Delete([FromBody] DeleteOperationCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            return Result(result);
         }
     }
 }
-

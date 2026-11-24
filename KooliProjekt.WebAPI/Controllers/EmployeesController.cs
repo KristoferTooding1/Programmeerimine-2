@@ -1,14 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MediatR;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using KooliProjekt.Application.Features.Employees;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
 namespace KooliProjekt.WebAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class EmployeesController : ControllerBase
+    public class EmployeesController : ApiControllerBase
     {
         private readonly IMediator _mediator;
 
@@ -17,29 +14,47 @@ namespace KooliProjekt.WebAPI.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<List<EmployeeDto>>> List()
-        {
-            var result = await _mediator.Send(new EmployeeListQuery());
-            return Ok(result);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<EmployeeDto>> Get(int id)
+        [HttpGet("get/{id}")]
+        public async Task<IActionResult> Get(int id)
         {
             if (id <= 0)
             {
                 return NotFound();
             }
 
-            var result = await _mediator.Send(new EmployeeGetQuery(id));
+            var query = new GetEmployeeQuery { Id = id };
+            var result = await _mediator.Send(query);
 
-            if (result == null)
+            return Result(result);
+        }
+
+        [HttpGet("list/{page}/{pageSize}")]
+        public async Task<IActionResult> List(int page, int pageSize)
+        {
+            var query = new ListEmployeesQuery
             {
-                return NotFound();
-            }
+                Page = page,
+                PageSize = pageSize
+            };
+            var result = await _mediator.Send(query);
 
-            return Ok(result);
+            return Result(result);
+        }
+
+        [HttpPost("save")]
+        public async Task<IActionResult> Save([FromBody] SaveEmployeeCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            return Result(result);
+        }
+
+        [HttpDelete("delete")]
+        public async Task<IActionResult> Delete([FromBody] DeleteEmployeeCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            return Result(result);
         }
     }
 }
